@@ -1,0 +1,94 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <title>Smart VoltSpot</title>
+  <meta name="theme-color" content="#0B2A4A">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-title" content="Smart VoltSpot">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <link rel="manifest" href="manifest.webmanifest">
+  <link rel="icon" type="image/png" sizes="192x192" href="icon-192.png">
+  <link rel="apple-touch-icon" sizes="180x180" href="icon-180.png">
+  <style>
+    :root { color-scheme: light dark; }
+    * { box-sizing: border-box; }
+    body {
+      margin: 0; min-height: 100vh; min-height: 100dvh; display: grid; place-items: center; padding: 24px;
+      font-family: Inter, Roboto, "Segoe UI", Arial, sans-serif; color: #fff;
+      background: radial-gradient(circle at 85% -10%, rgba(1, 112, 206, .7), transparent 55%), linear-gradient(135deg, #0B2A4A, #003A70);
+    }
+    main { width: 100%; max-width: 420px; text-align: center; display: grid; gap: 16px; justify-items: center; }
+    img.logo { width: 88px; height: 88px; border-radius: 22px; box-shadow: 0 8px 24px rgba(0, 0, 0, .35); }
+    h1 { margin: 0; font-size: 1.5rem; font-weight: 400; letter-spacing: -.01em; }
+    h1 strong { font-weight: 700; }
+    p { margin: 0; line-height: 1.45; opacity: .9; }
+    .card { background: rgba(255, 255, 255, .08); border: 1px solid rgba(255, 255, 255, .18); border-radius: 16px; padding: 16px; text-align: left; width: 100%; }
+    ol { margin: 8px 0 0; padding-left: 20px; display: grid; gap: 6px; }
+    button, a.btn {
+      display: inline-flex; align-items: center; justify-content: center; width: 100%; min-height: 48px; padding: 0 18px;
+      border-radius: 12px; border: 0; font: inherit; font-weight: 600; cursor: pointer; text-decoration: none;
+      background: #0170CE; color: #fff;
+    }
+    a.btn.sec { background: transparent; border: 1.5px solid rgba(255, 255, 255, .6); }
+    [hidden] { display: none !important; }
+  </style>
+</head>
+<body>
+  <main>
+    <img class="logo" src="icon-192.png" alt="">
+    <h1>Smart <strong>VoltSpot</strong></h1>
+    <p id="msg">Abrindo o app…</p>
+
+    <section class="card" id="instalar" hidden>
+      <strong>Instale na tela inicial</strong>
+      <ol id="passos"></ol>
+    </section>
+
+    <button type="button" id="btn-instalar" hidden>Instalar app</button>
+    <a class="btn" id="abrir" href="#">Abrir agora</a>
+  </main>
+
+  <script>
+    // Endereço do Web App (implantação do Apps Script). Atualize aqui se criar uma nova implantação.
+    var APP_URL = 'https://script.google.com/a/macros/gm.com/s/AKfycbxIbl-abV9XtU15A7Foh27DN_5ugcb00G4U-cHpSB7O6AVidfg2apmYSkkB9Qz1jfAbJA/exec';
+
+    // Repassa parâmetros (ex.: ?estacao=3 dos QR Codes), exceto os do próprio atalho.
+    var params = new URLSearchParams(location.search);
+    params.delete('origem');
+    var destino = APP_URL + (params.toString() ? '?' + params.toString() : '');
+    document.getElementById('abrir').href = destino;
+
+    var standalone = (window.matchMedia && matchMedia('(display-mode: standalone)').matches) || navigator.standalone === true;
+    var ios = /iPhone|iPad|iPod/i.test(navigator.userAgent);
+
+    if ('serviceWorker' in navigator) navigator.serviceWorker.register('sw.js').catch(function () {});
+
+    if (standalone) {
+      // Aberto pelo ícone da tela inicial: vai direto para o app.
+      location.replace(destino);
+    } else {
+      // Aberto no navegador: mostra como instalar (não redireciona para não perder a chance de instalar).
+      document.getElementById('msg').textContent = 'Instale o app para abrir com um toque, direto da tela inicial.';
+      var passos = ios
+        ? ['Toque em Compartilhar (seta para cima) na barra do Safari.', 'Escolha "Adicionar à Tela de Início".', 'Toque em "Adicionar".']
+        : ['Toque em "Instalar app" abaixo (ou no menu ⋮ do Chrome).', 'Confirme em "Instalar".'];
+      var ol = document.getElementById('passos');
+      passos.forEach(function (t) { var li = document.createElement('li'); li.textContent = t; ol.appendChild(li); });
+      document.getElementById('instalar').hidden = false;
+
+      var adiado = null;
+      window.addEventListener('beforeinstallprompt', function (e) {
+        e.preventDefault();
+        adiado = e;
+        document.getElementById('btn-instalar').hidden = false;
+      });
+      document.getElementById('btn-instalar').addEventListener('click', function () {
+        if (adiado) { adiado.prompt(); adiado = null; this.hidden = true; }
+      });
+    }
+  </script>
+</body>
+</html>
